@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import scrolledtext, messagebox
 
 
-def get_local_version(file_path='C:/ProgramData/xy-auto/version.txt'):
+def get_local_version(file_path=r'C:\ProgramData\xy-auto\version.txt'):
     try:
         with open(file_path, 'r') as file:
             version_str = file.read().strip()
@@ -11,18 +11,18 @@ def get_local_version(file_path='C:/ProgramData/xy-auto/version.txt'):
         print(f"Arquivo {file_path} não encontrado. Definindo versão como '0.0'")
         return version.parse('0.0')
 
-def preserve_database(db_path='C:/ProgramData/xy-auto/exe.win-amd64-3.12/BANCOCNPJ.xlsx', backup_path='BANCOCNPJ_backup.xlsx'):
+def preserve_database(db_path=r'C:\ProgramData\xy-auto\exe.win-amd64-3.12\resources\data\BANCOCNPJ.xlsx', backup_path=r'BANCOCNPJ_backup.xlsx'):
     if os.path.exists(db_path):
         shutil.copy2(db_path, backup_path)
         print(f"Banco de dados preservado em {backup_path}")
 
-def restore_database(db_path='C:/ProgramData/xy-auto/exe.win-amd64-3.12/BANCOCNPJ.xlsx', backup_path='BANCOCNPJ_backup.xlsx'):
+def restore_database(db_path=r'C:\ProgramData\xy-auto\exe.win-amd64-3.12\resources\data\BANCOCNPJ.xlsx', backup_path=r'BANCOCNPJ_backup.xlsx'):
     if os.path.exists(backup_path):
         shutil.copy2(backup_path, db_path)
         print(f"Banco de dados restaurado de {backup_path}")
         os.remove(backup_path)
 
-def update_local_version(new_version_str, file_path='C:/ProgramData/xy-auto/version.txt'):
+def update_local_version(new_version_str, file_path=r'C:\ProgramData\xy-auto\version.txt'):
     with open(file_path, 'w') as file:
         file.write(new_version_str)
     print(f"Versão local atualizada para {new_version_str}.")
@@ -41,7 +41,7 @@ def get_latest_release_info(repo_owner, repo_name):
         return tag_name, download_url , False
 
 
-def download_new_version(download_url, version_str, download_dir='downloads'):
+def download_new_version(download_url, version_str, download_dir=r'C:\ProgramData\xy-auto\downloads'):
     if not os.path.exists(download_dir):
         os.makedirs(download_dir)
     local_filename = os.path.join(download_dir, f'app_{version_str}.rar')
@@ -56,7 +56,7 @@ def download_new_version(download_url, version_str, download_dir='downloads'):
     print(f"Download completo: {local_filename}")
     return local_filename
 
-def extract_rar_file(rar_file_path, extract_to_dir='C:/ProgramData/xy-auto'):
+def extract_rar_file(rar_file_path, extract_to_dir=r'C:\ProgramData\xy-auto'):
     # Lista de caminhos possíveis onde o WinRAR pode estar instalado
     possible_paths = [
         r"C:\Program Files\WinRAR\WinRAR.exe",
@@ -74,7 +74,7 @@ def extract_rar_file(rar_file_path, extract_to_dir='C:/ProgramData/xy-auto'):
     if not winrar_path:
         raise FileNotFoundError("WinRAR não encontrado em nenhum dos caminhos padrão.")
 
-    preserve_database()
+    
     if not os.path.exists(extract_to_dir):
         os.makedirs(extract_to_dir)
     
@@ -82,17 +82,17 @@ def extract_rar_file(rar_file_path, extract_to_dir='C:/ProgramData/xy-auto'):
     subprocess.run([winrar_path, 'x', '-y', rar_file_path, extract_to_dir], check=True)
     
     print(f"Extração completa em: {extract_to_dir}")
-    restore_database()
+    
 
 
 def execute_program():
     program_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-    program_path = os.path.join(program_dir, 'C:/ProgramData/xy-auto', 'exe.win-amd64-3.12', 'app.exe')
+    program_path = os.path.join(program_dir, r'C:\ProgramData\xy-auto', 'exe.win-amd64-3.12', 'app.exe')
     os.chdir(os.path.dirname(program_path))
     subprocess.run([program_path])
     print(f"Executando {program_path}")
 
-def remove_downloads_folder(download_dir='downloads'):
+def remove_downloads_folder(download_dir=r'C:\ProgramData\xy-auto\downloads'):
     try:
         if os.path.exists(download_dir):
             shutil.rmtree(download_dir)
@@ -176,6 +176,14 @@ def main():
 
     def clear_log():
         log_box.delete(1.0, tk.END)
+    
+    def delete_atual():
+        program_dir = 'C:/ProgramData/xy-auto/exe.win-amd64-3.12'  # Caminho da pasta a ser deletada
+        try:
+            if os.path.exists(program_dir):
+                shutil.rmtree(program_dir)
+        except Exception as e:
+            log_message(f"Erro ao tentar excluir a pasta '{program_dir}': {e}")
 
     def start_update():
         clear_log()
@@ -187,7 +195,10 @@ def main():
                 try:
                     log_message(f"Atualizando para a versão {latest_version_str}...")
                     downloaded_file = download_new_version(download_url, latest_version_str)
+                    preserve_database()
+                    delete_atual()
                     extract_rar_file(downloaded_file)
+                    restore_database()
                     update_local_version(latest_version_str)
                     remove_downloads_folder()
                     log_message("Atualização concluída.")
